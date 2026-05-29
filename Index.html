@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<style>
+
+#placeMenu{
+position:absolute;
+top:20px;
+right:20px;
+width:220px;
+z-index:9999;
+background:white;
+padding:8px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.5);
+}
+#infoBox{
+position:absolute;
+bottom:20px;
+left:20px;
+
+width:300px;
+
+background:white;
+
+padding:10px;
+
+border-radius:10px;
+
+z-index:9999;
+
+box-shadow:0 0 10px rgba(0,0,0,0.5);
+}
+
+#infoBox img{
+border-radius:10px;
+margin-bottom:10px;
+}
+
+#placeMenu button{
+width:100%;
+margin-bottom:8px;
+padding:8px;
+cursor:pointer;
+}
+
+#placeMenu{
+position:absolute;
+top:20px;
+right:20px;
+width:220px;
+z-index:9999;
+background:white;
+padding:8px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.5);
+}
+
+#placeMenu button{
+width:100%;
+margin-bottom:8px;
+padding:8px;
+cursor:pointer;
+}
+
+#infoBox{
+position:absolute;
+bottom:20px;
+left:20px;
+width:300px;
+background:white;
+padding:10px;
+border-radius:10px;
+z-index:9999;
+box-shadow:0 0 10px rgba(0,0,0,0.5);
+}
+
+#infoBox img{
+border-radius:10px;
+margin-bottom:10px;
+cursor:pointer;
+transition:0.3s;
+}
+
+#infoBox img:hover{
+transform:scale(1.03);
+}
+
+#imageModal{
+display:none;
+
+position:fixed;
+
+z-index:99999;
+
+left:0;
+top:0;
+
+width:100%;
+height:100%;
+
+background:rgba(0,0,0,0.9);
+
+justify-content:center;
+align-items:center;
+}
+
+#modalImage{
+max-width:90%;
+max-height:90%;
+border-radius:10px;
+}
+
+#closeModal{
+position:absolute;
+top:20px;
+right:40px;
+color:white;
+font-size:50px;
+cursor:pointer;
+z-index:100000;
+} 
+
+</style>
+<meta charset="UTF-8">
+<title>เกาะหนู</title>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<base target="_blank">
+<link rel="stylesheet" type="text/css" href="./Qgis2threejs.css">
+<style type="text/css">
+#popup, #header, #layerpanel {
+  left: 36px;
+}
+</style>
+<script src="./threejs/three.min.js"></script>
+<script src="./threejs/OrbitControls.js"></script>
+<script src="./threejs/ViewHelper.js"></script>
+<script src="./Qgis2threejs.js"></script>
+</head>
+<body>
+<div id="view">
+  <div id="northarrow"></div>
+  <div id="navigation"></div>
+</div>
+
+<!-- popup -->
+<div id="popup">
+  <div id="closebtn">&times;</div>
+  <div id="popupbar"></div>
+  <div id="popupbody">
+    <div id="popupcontent"></div>
+
+    <!-- query result -->
+    <div id="queryresult">
+      <table id="qr_coords_table">
+        <caption>Clicked coordinates <div id="zoomtopoint" class="action-zoom zoombtn"></div></caption>
+        <tr><td id="qr_coords"></td></tr>
+      </table>
+
+      <table id="qr_layername_table">
+        <caption>Layer <div id="zoomtolayer" class="action-zoom zoombtn"></div></caption>
+        <tr><td id="qr_layername"></td></tr>
+      </table>
+
+      <table id="qr_attrs_table">
+        <caption>Attributes</caption>
+      </table>
+
+      <!-- camera actions and measure tool -->
+      <div id="orbitbtn" class="action-btn action-orbit">Orbit</div>
+      <div id="measurebtn" class="action-btn">Measure distance</div>
+    </div>
+
+    <!-- page info -->
+    <div id="pageinfo">
+      <h1>Current View URL</h1>
+      <div><input id="urlbox" type="text"></div>
+
+      <h1>Usage</h1>
+      <table id="usage">
+        <tr><td colspan="2" class="star">Mouse</td></tr>
+        <tr><td>Left button + Move</td><td>Orbit</td></tr>
+        <tr><td>Mouse Wheel</td><td>Zoom</td></tr>
+        <tr><td>Right button + Move</td><td>Pan</td></tr>
+
+        <tr><td colspan="2" class="star">Keys</td></tr>
+        <tr><td>Arrow keys</td><td>Move Horizontally</td></tr>
+        <tr><td>Shift + Arrow keys</td><td>Orbit</td></tr>
+        <tr><td>Ctrl + Arrow keys</td><td>Rotate</td></tr>
+        <tr><td>Shift + Ctrl + Up / Down</td><td>Zoom In / Out</td></tr>
+        <tr><td>L</td><td>Toggle Label Visibility</td></tr>
+        <tr><td>R</td><td>Start / Stop Orbit Animation</td></tr>
+        <tr><td>W</td><td>Wireframe Mode</td></tr>
+        <tr><td>Shift + R</td><td>Reset Camera Position</td></tr>
+        <tr><td>Shift + S</td><td>Save Image</td></tr>
+      </table>
+
+      <h1>About</h1>
+      <div id="about"><img src="./Qgis2threejs.png">
+        This page was made with <a href="https://www.qgis.org/">QGIS</a> and <a href="https://github.com/minorua/Qgis2threejs">Qgis2threejs</a> plugin (version 2.10.2).
+        <div>Powered by <a href="https://threejs.org/">three.js</a>
+        <span id="lib_proj4js"> and <a href="https://trac.osgeo.org/proj4js/">Proj4js</a></span>.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- progress bar -->
+<div id="progress"><div id="progressbar"></div></div>
+
+<!-- menu -->
+<div id="toolbtns">
+  <div id="layerbtn"></div>
+  <div id="animbtn" class="hidden"></div>
+  <div id="infobtn"></div>
+</div>
+
+<!-- header and footer -->
+<div id="header"></div>
+<div id="footer"></div>
+
+<!-- layer panel -->
+<div id="layerpanel">
+  <div id="layerlist"></div>
+</div>
+
+<!-- animation -->
+<div id="narrativebox" class="ef1">
+  <div id="narbody">
+
+  </div>
+  <div id="nextbtn"></div>
+</div>
+
+<script>
+Q3D.Config.viewpoint = {lookAt:{x:676706.033862973,y:800185.9457860393,z:0.0},pos:{x:676706.033862973,y:795530.3805646774,z:4655.565221361898}};
+Q3D.Config.localMode = true;
+Q3D.Config.northArrow.enabled = true;
+Q3D.Config.northArrow.color = 0x001aff;
+
+var container = document.getElementById("view"),
+    app = Q3D.application,
+    gui = Q3D.gui;
+
+app.init(container);       // initialize viewer
+
+// load the scene
+app.loadSceneFile("./data/Rat/scene.js", function (scene) {
+  // scene file has been loaded
+  app.start();
+}, function (scene) {
+  // all associated files have been loaded
+
+});
+</script>
+<img src="legend.png"
+style="
+position:absolute;
+top:220px;
+right:20px;
+width:220px;
+z-index:9999;
+background:white;
+padding:8px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.5);
+">
+<script>
+
+function goToPlace(id){
+
+    if(id == 1){
+
+        app.camera.position.set(-492.8580732461559, 41.812616760343644, 82.05457743705163);
+
+        app.controls.target.set(-397.31246022138095, 56.73487652003686, 3.06032556277108e-15);
+
+        document.getElementById("placeImage").src = "pier.jpg";
+
+        document.getElementById("placeTitle").innerHTML = "ท่าเทียบเรือ";
+
+        document.getElementById("placeDesc").innerHTML = "จุดจอดเรือหลักของเกาะ";
+    }
+
+    if(id == 2){
+
+        app.camera.position.set(-436.5430794097035, 432.5005215915416, 77.81818801960864);
+
+        app.controls.target.set(-371.25897906266937, 356.5603639790507, 8.551644581030583e-15);
+
+        document.getElementById("placeImage").src = "pinkrock.jpg";
+
+        document.getElementById("placeTitle").innerHTML = "ผาสีชมพู";
+
+        document.getElementById("placeDesc").innerHTML = "จุดชมวิวหินสีชมพู";
+    }
+
+    if(id == 3){
+
+        app.camera.position.set(-240.16977947867105, 414.41222663202404, 24.396811809390694);
+
+        app.controls.target.set(-352.8249064475696, 321.70472665861973, -2.7065040595436926e-15);
+
+        document.getElementById("placeImage").src = "emeraldcave.jpg";
+
+        document.getElementById("placeTitle").innerHTML = "ถ้ำมรกต";
+
+        document.getElementById("placeDesc").innerHTML = "จุดท่องเที่ยวชื่อดัง";
+    }
+
+    app.controls.update();
+}
+
+function openImage(src){
+
+    document.getElementById("imageModal").style.display = "flex";
+
+    document.getElementById("modalImage").src = src;
+}
+
+window.onload = function(){
+
+    document.getElementById("closeModal").onclick = function(e){
+
+        e.stopPropagation();
+
+        document.getElementById("imageModal").style.display = "none";
+    };
+
+    document.getElementById("imageModal").onclick = function(e){
+
+        if(e.target.id == "imageModal"){
+
+            document.getElementById("imageModal").style.display = "none";
+        }
+    };
+};
+
+</script>
+
+<div id="placeMenu">
+
+  <button onclick="goToPlace(1)">
+    ท่าเทียบเรือ
+  </button>
+
+  <button onclick="goToPlace(2)">
+    ผาสีชมพู
+  </button>
+
+  <button onclick="goToPlace(3)">
+    ถ้ำมรกต
+  </button>
+
+</div>
+
+<div id="infoBox">
+
+  <img id="placeImage" src="" width="100%" onclick="openImage(this.src)">
+
+  <h3 id="placeTitle"></h3>
+
+  <p id="placeDesc"></p>
+
+</div>
+
+<div id="imageModal">
+
+  <span id="closeModal">&times;</span>
+
+  <img id="modalImage" onclick="event.stopPropagation()">
+
+</div>
+</body>
+</html>
